@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexora Mini App Test</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* استایل‌های اولیه برای هماهنگی با تم تلگرام */
+        body {
+            font-family: Tahoma, sans-serif;
+            background-color: var(--tg-theme-bg-color, #f4f4f5);
+            color: var(--tg-theme-text-color, #1c1c1e);
+            margin: 0;
+            padding: 20px;
+            text-align: right;
+        }
+        h1 {
+            color: var(--tg-theme-link-color, #007aff);
+            border-bottom: 2px solid var(--tg-theme-hint-color, #ccc);
+            padding-bottom: 10px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .data-box {
+            background-color: var(--tg-theme-secondary-bg-color, #e5e5e5);
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 14px;
+            direction: ltr; /* برای نمایش initData خام */
+            text-align: left;
+        }
+        button {
+            background-color: var(--tg-theme-button-color, #007aff);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Nexora Mini App Test</h1>
+        <p>وضعیت WebApp و اتصال به بک‌اند شما (<bdi dir="ltr">202.133.89.41</bdi>) را تست می‌کند.</p>
+
+        <h2>اطلاعات کاربر:</h2>
+        <div id="user-info" class="data-box">در حال بارگذاری...</div>
+
+        <h2>initData خام:</h2>
+        <div id="init-data-raw" class="data-box">—</div>
+
+        <button id="test-api-button">🧪 تست اتصال امن به بک‌اند</button>
+        <div id="api-result" class="data-box">نتیجه API اینجا نمایش داده می‌شود...</div>
+    </div>
+
+    <script>
+        // ⚠️ مهم: آدرس بک‌اند شما تنظیم شد.
+        const BACKEND_URL = 'http://202.133.89.41'; 
+        
+        const initData = window.Telegram?.WebApp?.initData;
+        const WebApp = window.Telegram?.WebApp;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!WebApp) {
+                document.getElementById('user-info').textContent = '⚠️ اسکریپت WebApp تلگرام بارگذاری نشد. این صفحه را در داخل تلگرام باز کنید.';
+                return;
+            }
+            
+            // آماده‌سازی WebApp
+            WebApp.ready();
+            WebApp.expand();
+
+            // نمایش اطلاعات
+            const userInfo = WebApp.initDataUnsafe?.user;
+            document.getElementById('init-data-raw').textContent = initData || 'initData موجود نیست.';
+            
+            if (userInfo) {
+                const userText = `
+                    👤 User ID: ${userInfo.id}
+                    🪪 Name: ${userInfo.first_name} ${userInfo.last_name || ''}
+                    📧 Username: ${userInfo.username ? '@' + userInfo.username : '—'}
+                `;
+                document.getElementById('user-info').textContent = userText;
+            } else {
+                document.getElementById('user-info').textContent = '⚠️ اطلاعات کاربر (user info) در دسترس نیست. (initData خام وجود دارد)';
+            }
+
+            // ⭐️ مرحله ۲: تابع تست API ⭐️
+            document.getElementById('test-api-button').addEventListener('click', async () => {
+                const apiResultElement = document.getElementById('api-result');
+                apiResultElement.textContent = '... در حال ارسال درخواست به بک‌اند...';
+                
+                if (!initData) {
+                    apiResultElement.textContent = '❌ خطا: initData موجود نیست.';
+                    return;
+                }
+
+                try {
+                    // اتصال به endpoint شما: /api/buyItem
+                    const response = await fetch(`${BACKEND_URL}/api/buyItem`, {
+                        method: 'POST',
+                        headers: {
+                            // 🔑 مهم: ارسال initData در هدر 'Telegram-Init-Data'
+                            'Telegram-Init-Data': initData,
+                            'Content-Type': 'application/json'
+                        },
+                        // ارسال داده‌های تستی مورد نیاز تابع buy_item
+                        body: JSON.stringify({ listingId: "test_listing_123" }) 
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        apiResultElement.textContent = '✅ اتصال و اعتبارسنجی موفقیت‌آمیز!\n' + JSON.stringify(data, null, 2);
+                        WebApp.showPopup({
+                            title: "اتصال موفق",
+                            message: "دریافت اطلاعات از بک‌اند با موفقیت انجام شد.",
+                            buttons: [{ text: "تایید" }]
+                        });
+                    } else {
+                        apiResultElement.textContent = `❌ خطای بک‌اند (${response.status}):\n` + JSON.stringify(data, null, 2);
+                        WebApp.showAlert(`❌ خطای بک‌اند:\n${data.detail || 'خطای نامشخص'}`);
+                    }
+                } catch (error) {
+                    console.error("API Error:", error);
+                    apiResultElement.textContent = `❌ خطای شبکه، اتصال یا CORS:\n${error.message}\n**مطمئن شوید آدرس صحیح است و CORS در FastAPI برای دامنه Vercel تنظیم شده است.**`;
+                    WebApp.showAlert(`❌ خطای شبکه: ${error.message}`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
