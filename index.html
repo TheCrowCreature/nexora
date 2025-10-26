@@ -113,8 +113,9 @@
                     const response = await fetch(`${BACKEND_URL}/api/buyItem`, {
                         method: 'POST',
                         headers: {
-                            // 🔑 مهم: ارسال initData در هدر 'Telegram-Init-Data'
-                            'Telegram-Init-Data': initData,
+                            // 🔑 اصلاح ضروری: نام هدر باید به 'X-Telegram-Init-Data' تغییر کند.
+                            // این استانداردترین نام هدر برای اعتبارسنجی در بک‌اند است.
+                            'X-Telegram-Init-Data': initData, 
                             'Content-Type': 'application/json'
                         },
                         // ارسال داده‌های تستی مورد نیاز تابع buy_item
