@@ -3,23 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexora Mini App Test</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        /* استایل‌های اولیه برای هماهنگی با تم تلگرام */
-        body {
-            font-family: Tahoma, sans-serif;
-            background-color: var(--tg-theme-bg-color, #f4f4f5);
-            color: var(--tg-theme-text-color, #1c1c1e);
-            margin: 0;
-            padding: 20px;
-            text-align: right;
-        }
-        h1 {<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexora Marketplace</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -27,7 +10,7 @@
         /* --- CSS: استفاده از متغیرهای تم تلگرام --- */
         /* ------------------------------------------- */
         body {
-            font-family: Tahoma, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--tg-theme-bg-color, #f4f4f5);
             color: var(--tg-theme-text-color, #1c1c1e);
             margin: 0;
@@ -36,13 +19,13 @@
         }
 
         .header {
-            background-color: var(--tg-theme-header-bg-color, #ffffff);
+            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
             padding: 15px 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             text-align: center;
             color: var(--tg-theme-link-color, #007aff);
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 18px;
+            font-weight: 600;
         }
 
         .container {
@@ -56,55 +39,73 @@
             background-color: var(--tg-theme-secondary-bg-color, #ffffff);
             border-radius: 12px;
             margin-bottom: 12px;
-            padding: 15px;
+            padding: 10px; /* فضای داخلی کمتر */
             display: flex;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s;
+            box-shadow: 0 0 0 1px var(--tg-theme-hint-color, #ccc); /* حاشیه ظریف */
+            transition: background-color 0.1s;
         }
-
+        
+        /* برای زیباتر شدن در حالت Dark Mode */
         .listing-card:hover {
-            transform: translateY(-2px);
+            background-color: color-mix(in srgb, var(--tg-theme-secondary-bg-color), var(--tg-theme-hint-color) 5%);
         }
 
         .item-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
+            width: 70px; /* اندازه کوچک‌تر */
+            height: 70px;
+            border-radius: 10px;
             object-fit: cover;
             margin-left: 15px;
-            border: 1px solid var(--tg-theme-hint-color);
+            border: 2px solid var(--tg-theme-link-color); /* حاشیه رنگی */
         }
 
         .item-details {
             flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .item-details h3 {
-            margin: 0 0 5px 0;
+            margin: 0 0 2px 0;
             font-size: 16px;
             color: var(--tg-theme-text-color);
+            font-weight: 600;
         }
 
         .item-details p {
             margin: 0;
-            font-size: 13px;
+            font-size: 12px;
             color: var(--tg-theme-hint-color);
         }
-
-        .price-tag {
-            font-size: 18px;
+        
+        .rarity-tag {
+            font-size: 12px;
             font-weight: bold;
-            color: var(--tg-theme-link-color, #007aff);
-            margin-top: 5px;
+            display: inline-block;
         }
 
-        /* دکمه خرید */
+        .price-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-top: 5px;
+        }
+        
+        .price-tag {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--tg-theme-link-color, #007aff);
+            margin-left: 10px;
+        }
+
+        /* دکمه خرید در سمت چپ */
         .buy-button {
             background-color: var(--tg-theme-button-color, #007aff);
             color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
-            padding: 8px 15px;
+            padding: 10px 18px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
@@ -113,20 +114,16 @@
             white-space: nowrap;
         }
 
-        .buy-button:active {
-            filter: brightness(0.9);
-        }
-        
-        /* Loading & Empty states */
+        /* Rarity Colors */
+        .rarity-Mystic { color: #AA00FF; } /* بنفش پررنگ */
+        .rarity-Legendary { color: #FFD700; } /* طلایی */
+        .rarity-Epic { color: #FF4500; } /* نارنجی-قرمز */
+
         .status-message {
             text-align: center;
             color: var(--tg-theme-hint-color);
             padding: 50px 20px;
         }
-        
-        .rarity-Mystic { color: #800080; } /* Purple */
-        .rarity-Legendary { color: #FFD700; } /* Gold */
-        .rarity-Epic { color: #9400D3; } /* Violet */
     </style>
 </head>
 <body>
@@ -146,9 +143,9 @@
         const WebApp = window.Telegram?.WebApp;
         const initData = WebApp?.initData;
         
-        // فرمت دادن قیمت
+        // فرمت دادن قیمت به ریال/واحد پولی شما
         function formatPrice(price) {
-            return price.toLocaleString('fa-IR') + ' NX';
+            return new Intl.NumberFormat('fa-IR').format(price) + ' NX';
         }
 
         // 1. تابع اصلی برای بارگذاری آیتم‌ها
@@ -193,7 +190,7 @@
             const container = document.getElementById('listings-container');
             container.innerHTML = '';
             
-            if (listings.length === 0) {
+            if (!Array.isArray(listings) || listings.length === 0) {
                 container.innerHTML = '<div class="status-message">هیچ آیتمی برای فروش وجود ندارد.</div>';
                 return;
             }
@@ -203,24 +200,28 @@
                 card.className = 'listing-card';
                 card.dataset.listingId = item.listing_id;
 
-                const priceHtml = `<span class="price-tag">${formatPrice(item.price)}</span>`;
-                const rarityClass = `rarity-${item.rarity}`;
+                const priceHtml = `<span class="price-tag">${formatPrice(item.price || 0)}</span>`;
+                const rarity = item.rarity || 'Common';
+                const rarityClass = `rarity-${rarity}`;
 
                 card.innerHTML = `
-                    <img src="${item.img_url}" alt="Character Image" class="item-image">
+                    <img src="${item.img_url || 'placeholder.jpg'}" alt="Character Image" class="item-image">
                     <div class="item-details">
-                        <h3>${item.listing_id}</h3>
-                        <p>توسط: @${item.owner_username}</p>
-                        <p>کمیابی: <span class="${rarityClass}">${item.rarity}</span></p>
+                        <h3>${item.name || 'آیتم ناشناس'}</h3>
+                        <p>توسط: @${item.owner_username || 'سیستم'}</p>
+                        <p>ID: ${item.listing_id}</p>
+                        <div class="price-row">
+                            <span class="${rarityClass} rarity-tag">کمیابی: ${rarity}</span>
+                            ${priceHtml}
+                        </div>
                     </div>
-                    ${priceHtml}
+                    
                     <button class="buy-button" data-id="${item.listing_id}">خرید</button>
                 `;
                 
                 // افزودن دکمه خرید
                 const buyButton = card.querySelector('.buy-button');
                 buyButton.addEventListener('click', () => {
-                    // فراخوانی تابع خرید با استفاده از ID
                     buyItem(item.listing_id, buyButton);
                 });
 
@@ -228,15 +229,12 @@
             });
         }
         
-        // 3. تابع خرید آیتم
+        // 3. تابع خرید آیتم (که همچنان به buyItem در بک‌اند اشاره می‌کند)
         async function buyItem(listingId, buttonElement) {
             buttonElement.disabled = true;
             buttonElement.textContent = '...در حال خرید';
-            WebApp.showMainButton(); // نمایش دکمه اصلی (اختیاری)
 
             try {
-                // ⚠️ این درخواست به buyItem ارسال می‌شود که احتمالاً خطای 500 می‌دهد.
-                // اگر خطای 500 رفع نشده، اینجا با خطا مواجه خواهید شد.
                 const response = await fetch(`${BACKEND_URL}/api/buyItem`, {
                     method: 'POST',
                     headers: {
@@ -252,6 +250,7 @@
                     WebApp.showAlert(`✅ خرید موفقیت‌آمیز: ${data.message}`);
                     fetchListings(); // رفرش لیست
                 } else {
+                    // این بخش، ارور 500 را مدیریت می‌کند
                     WebApp.showAlert(`❌ خطا در خرید (${response.status}): ${data.detail || 'خطای ناشناخته'}`);
                 }
 
@@ -270,139 +269,10 @@
             if (WebApp && WebApp.ready) {
                 WebApp.ready();
                 WebApp.expand();
-                // شروع به بارگذاری لیست آیتم‌ها
                 fetchListings(); 
             } else {
                 document.getElementById('listings-container').innerHTML = '<div class="status-message">⚠️ لطفا این صفحه را در داخل تلگرام باز کنید.</div>';
             }
-        });
-    </script>
-</body>
-</html>
-            color: var(--tg-theme-link-color, #007aff);
-            border-bottom: 2px solid var(--tg-theme-hint-color, #ccc);
-            padding-bottom: 10px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        .data-box {
-            background-color: var(--tg-theme-secondary-bg-color, #e5e5e5);
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 8px;
-            white-space: pre-wrap;
-            word-break: break-all;
-            font-size: 14px;
-            direction: ltr; /* برای نمایش initData خام */
-            text-align: left;
-        }
-        button {
-            background-color: var(--tg-theme-button-color, #007aff);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-            font-size: 16px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 Nexora Mini App Test</h1>
-        <p>وضعیت WebApp و اتصال به بک‌اند شما (<bdi dir="ltr">202.133.89.41</bdi>) را تست می‌کند.</p>
-
-        <h2>اطلاعات کاربر:</h2>
-        <div id="user-info" class="data-box">در حال بارگذاری...</div>
-
-        <h2>initData خام:</h2>
-        <div id="init-data-raw" class="data-box">—</div>
-
-        <button id="test-api-button">🧪 تست اتصال امن به بک‌اند (نمایش لیست)</button>
-        <div id="api-result" class="data-box">نتیجه API اینجا نمایش داده می‌شود...</div>
-    </div>
-
-    <script>
-        // ⚠️ مهم: آدرس بک‌اند شما تنظیم شد.
-        const BACKEND_URL = 'https://api.thecrowcreature.ir'; 
-        
-        const initData = window.Telegram?.WebApp?.initData;
-        const WebApp = window.Telegram?.WebApp;
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!WebApp) {
-                document.getElementById('user-info').textContent = '⚠️ اسکریپت WebApp تلگرام بارگذاری نشد. این صفحه را در داخل تلگرام باز کنید.';
-                return;
-            }
-            
-            // آماده‌سازی WebApp
-            WebApp.ready();
-            WebApp.expand();
-
-            // نمایش اطلاعات
-            const userInfo = WebApp.initDataUnsafe?.user;
-            document.getElementById('init-data-raw').textContent = initData || 'initData موجود نیست.';
-            
-            if (userInfo) {
-                const userText = `
-                    👤 User ID: ${userInfo.id}
-                    🪪 Name: ${userInfo.first_name} ${userInfo.last_name || ''}
-                    📧 Username: ${userInfo.username ? '@' + userInfo.username : '—'}
-                `;
-                document.getElementById('user-info').textContent = userText;
-            } else {
-                document.getElementById('user-info').textContent = '⚠️ اطلاعات کاربر (user info) در دسترس نیست. (initData خام وجود دارد)';
-            }
-
-            // ⭐️ مرحله ۲: تابع تست API ⭐️
-            document.getElementById('test-api-button').addEventListener('click', async () => {
-                const apiResultElement = document.getElementById('api-result');
-                apiResultElement.textContent = '... در حال ارسال درخواست به بک‌اند...';
-                
-                if (!initData) {
-                    apiResultElement.textContent = '❌ خطا: initData موجود نیست.';
-                    return;
-                }
-
-                try {
-                    // 🔑 اصلاح ۱: اتصال به endpoint نمایش لیست: /api/getMarketplace
-                    const response = await fetch(`${BACKEND_URL}/api/getMarketplace`, {
-                        // 🔑 اصلاح ۲: متد را به GET تغییر دهید
-                        method: 'GET',
-                        headers: {
-                            // 🔑 اصلاح ۳: استفاده از نام هدر استاندارد برای اعتبارسنجی
-                            'X-Telegram-Init-Data': initData, 
-                            'Content-Type': 'application/json' 
-                        },
-                        // ⚠️ بدنه درخواست (body) حذف شد چون متد GET است.
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        apiResultElement.textContent = '✅ اتصال و اعتبارسنجی موفقیت‌آمیز! (دریافت لیست):\n' + JSON.stringify(data, null, 2);
-                        WebApp.showPopup({
-                            title: "اتصال موفق",
-                            message: "دریافت اطلاعات لیست از بک‌اند با موفقیت انجام شد.",
-                            buttons: [{ text: "تایید" }]
-                        });
-                    } else {
-                        apiResultElement.textContent = `❌ خطای بک‌اند (${response.status}):\n` + JSON.stringify(data, null, 2);
-                        WebApp.showAlert(`❌ خطای بک‌اند:\n${data.detail || 'خطای نامشخص'}`);
-                    }
-                } catch (error) {
-                    console.error("API Error:", error);
-                    apiResultElement.textContent = `❌ خطای شبکه، اتصال یا CORS:\n${error.message}\n**مطمئن شوید آدرس صحیح است و CORS در FastAPI برای دامنه Vercel تنظیم شده است.**`;
-                    WebApp.showAlert(`❌ خطای شبکه: ${error.message}`);
-                }
-            });
         });
     </script>
 </body>
