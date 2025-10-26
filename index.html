@@ -15,7 +15,270 @@
             padding: 20px;
             text-align: right;
         }
-        h1 {
+        h1 {<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexora Marketplace</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* ------------------------------------------- */
+        /* --- CSS: استفاده از متغیرهای تم تلگرام --- */
+        /* ------------------------------------------- */
+        body {
+            font-family: Tahoma, sans-serif;
+            background-color: var(--tg-theme-bg-color, #f4f4f5);
+            color: var(--tg-theme-text-color, #1c1c1e);
+            margin: 0;
+            padding: 0;
+            text-align: right;
+        }
+
+        .header {
+            background-color: var(--tg-theme-header-bg-color, #ffffff);
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            color: var(--tg-theme-link-color, #007aff);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* استایل کارت آیتم */
+        .listing-card {
+            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .listing-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-left: 15px;
+            border: 1px solid var(--tg-theme-hint-color);
+        }
+
+        .item-details {
+            flex-grow: 1;
+        }
+
+        .item-details h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: var(--tg-theme-text-color);
+        }
+
+        .item-details p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .price-tag {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--tg-theme-link-color, #007aff);
+            margin-top: 5px;
+        }
+
+        /* دکمه خرید */
+        .buy-button {
+            background-color: var(--tg-theme-button-color, #007aff);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .buy-button:active {
+            filter: brightness(0.9);
+        }
+        
+        /* Loading & Empty states */
+        .status-message {
+            text-align: center;
+            color: var(--tg-theme-hint-color);
+            padding: 50px 20px;
+        }
+        
+        .rarity-Mystic { color: #800080; } /* Purple */
+        .rarity-Legendary { color: #FFD700; } /* Gold */
+        .rarity-Epic { color: #9400D3; } /* Violet */
+    </style>
+</head>
+<body>
+    <div class="header">💎 مارکت‌پلیس Nexora</div>
+    
+    <div class="container">
+        <div id="listings-container">
+            <div class="status-message">... در حال بارگذاری لیست آیتم‌ها ...</div>
+        </div>
+    </div>
+
+    <script>
+        // -------------------------------------------
+        // --- JavaScript: منطق برنامه ---
+        // -------------------------------------------
+        const BACKEND_URL = 'https://api.thecrowcreature.ir';
+        const WebApp = window.Telegram?.WebApp;
+        const initData = WebApp?.initData;
+        
+        // فرمت دادن قیمت
+        function formatPrice(price) {
+            return price.toLocaleString('fa-IR') + ' NX';
+        }
+
+        // 1. تابع اصلی برای بارگذاری آیتم‌ها
+        async function fetchListings() {
+            const container = document.getElementById('listings-container');
+            if (!initData) {
+                container.innerHTML = '<div class="status-message">❌ خطا: WebApp InitData موجود نیست.</div>';
+                return;
+            }
+
+            try {
+                container.innerHTML = '<div class="status-message">... در حال بارگذاری ...</div>';
+                
+                const response = await fetch(`${BACKEND_URL}/api/getMarketplace`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Telegram-Init-Data': initData,
+                        'Content-Type': 'application/json' 
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    renderListings(data);
+                } else if (response.status === 401) {
+                    container.innerHTML = '<div class="status-message">🔒 خطا: اعتبار سنجی شکست خورد. (401)</div>';
+                } 
+                else {
+                    container.innerHTML = `<div class="status-message">❌ خطای API (${response.status}): ${data.detail || 'خطای ناشناخته'}</div>`;
+                }
+
+            } catch (error) {
+                container.innerHTML = `<div class="status-message">❌ خطای شبکه: سرور در دسترس نیست یا CORS مشکل دارد.</div>`;
+                WebApp.showAlert('خطای اتصال به سرور!');
+                console.error("Fetch Error:", error);
+            }
+        }
+
+        // 2. تابع نمایش آیتم‌ها
+        function renderListings(listings) {
+            const container = document.getElementById('listings-container');
+            container.innerHTML = '';
+            
+            if (listings.length === 0) {
+                container.innerHTML = '<div class="status-message">هیچ آیتمی برای فروش وجود ندارد.</div>';
+                return;
+            }
+
+            listings.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'listing-card';
+                card.dataset.listingId = item.listing_id;
+
+                const priceHtml = `<span class="price-tag">${formatPrice(item.price)}</span>`;
+                const rarityClass = `rarity-${item.rarity}`;
+
+                card.innerHTML = `
+                    <img src="${item.img_url}" alt="Character Image" class="item-image">
+                    <div class="item-details">
+                        <h3>${item.listing_id}</h3>
+                        <p>توسط: @${item.owner_username}</p>
+                        <p>کمیابی: <span class="${rarityClass}">${item.rarity}</span></p>
+                    </div>
+                    ${priceHtml}
+                    <button class="buy-button" data-id="${item.listing_id}">خرید</button>
+                `;
+                
+                // افزودن دکمه خرید
+                const buyButton = card.querySelector('.buy-button');
+                buyButton.addEventListener('click', () => {
+                    // فراخوانی تابع خرید با استفاده از ID
+                    buyItem(item.listing_id, buyButton);
+                });
+
+                container.appendChild(card);
+            });
+        }
+        
+        // 3. تابع خرید آیتم
+        async function buyItem(listingId, buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.textContent = '...در حال خرید';
+            WebApp.showMainButton(); // نمایش دکمه اصلی (اختیاری)
+
+            try {
+                // ⚠️ این درخواست به buyItem ارسال می‌شود که احتمالاً خطای 500 می‌دهد.
+                // اگر خطای 500 رفع نشده، اینجا با خطا مواجه خواهید شد.
+                const response = await fetch(`${BACKEND_URL}/api/buyItem`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Telegram-Init-Data': initData,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ listingId: listingId })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    WebApp.showAlert(`✅ خرید موفقیت‌آمیز: ${data.message}`);
+                    fetchListings(); // رفرش لیست
+                } else {
+                    WebApp.showAlert(`❌ خطا در خرید (${response.status}): ${data.detail || 'خطای ناشناخته'}`);
+                }
+
+            } catch (error) {
+                WebApp.showAlert('❌ خطای شبکه در هنگام تلاش برای خرید!');
+                console.error("Buy Error:", error);
+            } finally {
+                buttonElement.disabled = false;
+                buttonElement.textContent = 'خرید';
+            }
+        }
+
+
+        // 4. مقداردهی اولیه برنامه
+        document.addEventListener('DOMContentLoaded', () => {
+            if (WebApp && WebApp.ready) {
+                WebApp.ready();
+                WebApp.expand();
+                // شروع به بارگذاری لیست آیتم‌ها
+                fetchListings(); 
+            } else {
+                document.getElementById('listings-container').innerHTML = '<div class="status-message">⚠️ لطفا این صفحه را در داخل تلگرام باز کنید.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
             color: var(--tg-theme-link-color, #007aff);
             border-bottom: 2px solid var(--tg-theme-hint-color, #ccc);
             padding-bottom: 10px;
